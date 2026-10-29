@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>구미캠퍼스 오늘 — 날씨 · 식단</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f5f1; --card:#ffffff; --ink:#1b2a2f; --sub:#5d6b70; --line:#dde3dc;
+  --b:#b7791f; --bbg:#fbf1dc; --l:#1f7a64; --lbg:#dff1ea; --d:#4a58a8; --dbg:#e5e8f7;
+  --sky1:#d9ecf7; --sky2:#f3f5f1; --pick:#1b2a2f; --pickink:#f3f5f1; --rain:#2f6fb0;
+  color-scheme:light; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#121a1d; --card:#1b2529; --ink:#e8eeea; --sub:#9aa9ad; --line:#2c393e;
+    --b:#e3b25a; --bbg:#33291a; --l:#5cc8a5; --lbg:#173229; --d:#9aa6ee; --dbg:#222849;
+    --sky1:#1c3445; --sky2:#1b2529; --pick:#e8eeea; --pickink:#121a1d; --rain:#7db3ea; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121a1d; --card:#1b2529; --ink:#e8eeea; --sub:#9aa9ad; --line:#2c393e;
+  --b:#e3b25a; --bbg:#33291a; --l:#5cc8a5; --lbg:#173229; --d:#9aa6ee; --dbg:#222849;
+  --sky1:#1c3445; --sky2:#1b2529; --pick:#e8eeea; --pickink:#121a1d; --rain:#7db3ea; color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans KR",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.55;-webkit-text-size-adjust:100%}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:26px;font-weight:900;letter-spacing:-.02em;margin:4px 0 2px}
+.sub{margin:0;color:var(--sub);font-size:14px}
+a{color:var(--l)}
+/* weather */
+.wx{margin:16px 0 8px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,var(--sky1),var(--sky2));overflow:hidden}
+.now{display:flex;align-items:center;gap:14px;padding:16px 18px 10px}
+.now .e{font-size:52px;line-height:1}
+.now .t{font-size:44px;font-weight:900;letter-spacing:-.03em;line-height:1}
+.now .t small{font-size:20px;font-weight:700}
+.now .c{font-size:15px;color:var(--sub);margin-top:4px}
+.tip{padding:0 18px 14px;font-size:14px}
+.strip{display:flex;gap:8px;overflow-x:auto;padding:10px 12px 12px;background:var(--card);border-top:1px solid var(--line)}
+.dc{flex:0 0 auto;min-width:78px;text-align:center;border:1px solid var(--line);border-radius:12px;padding:8px 6px;font-size:13px}
+.dc .n{font-weight:700}
+.dc .e{font-size:24px;line-height:1.3}
+.dc .r{color:var(--rain);font-size:12px;min-height:18px}
+.dc.today{border:2px solid var(--l)}
+.dc.past{opacity:.45}
+.wnote{padding:6px 14px 10px;font-size:12px;color:var(--sub);background:var(--card)}
+/* meals */
+.bar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:20px 0 10px;flex-wrap:wrap}
+.seg,.mode{display:flex;gap:6px}
+.seg button,.mode button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer;font-weight:500;font-size:15px;min-height:44px;line-height:1.25}
+.seg button small{display:block;font-size:11px;color:var(--sub);font-weight:400}
+.mode button{font-size:13px;min-height:36px;padding:6px 12px}
+.seg button[aria-pressed="true"],.mode button[aria-pressed="true"]{background:var(--pick);color:var(--pickink);border-color:var(--pick);font-weight:700}
+.seg button[aria-pressed="true"] small{color:var(--pickink)}
+.seg button.today{border-color:var(--l);border-width:2px}
+button:focus-visible{outline:3px solid var(--l);outline-offset:2px}
+.dayline{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 10px;font-weight:700}
+.chip{font-weight:500;font-size:13px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:2px 10px}
+.notice{background:var(--card);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--sub);margin-bottom:12px}
+.meal{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:12px;overflow:hidden;border-left:6px solid var(--c)}
+.meal.b{--c:var(--b);--cbg:var(--bbg)} .meal.l{--c:var(--l);--cbg:var(--lbg)} .meal.d{--c:var(--d);--cbg:var(--dbg)}
+.meal.now{box-shadow:0 0 0 2px var(--c)}
+.mh{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:12px 16px 4px;flex-wrap:wrap}
+.mh h2{margin:0;font-size:18px;font-weight:900;color:var(--c)}
+.mh .t{font-size:13px;color:var(--sub)}
+.st{display:inline-block;font-size:12px;font-weight:700;background:var(--cbg);color:var(--c);border-radius:999px;padding:1px 9px;margin-left:8px;vertical-align:2px}
+.extra{padding:0 16px;font-size:12px;color:var(--sub)}
+ul.items{list-style:none;margin:0;padding:8px 16px 14px;display:flex;flex-wrap:wrap;gap:6px}
+ul.items li{background:var(--cbg);border-radius:8px;padding:5px 10px;font-size:15px}
+ul.items li.badge{background:var(--c);color:var(--card);font-weight:700}
+ul.items li .side{color:var(--sub);font-size:13px}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:13.5px}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+tr:last-child td{border-bottom:0}
+th{font-weight:700;background:var(--bg)}
+td:first-child,th:first-child{position:sticky;left:0;background:var(--card);font-weight:900;white-space:nowrap}
+th:first-child{background:var(--bg)}
+tr.today td,tr.today td:first-child{background:var(--lbg)}
+td .it{display:block}
+footer{margin-top:18px;font-size:12.5px;color:var(--sub)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>구미캠퍼스 오늘</h1>
+  <p class="sub">한국폴리텍대학 · 날씨와 학생식당 식단</p>
+
+  <section class="wx" aria-label="날씨">
+    <div id="wnow"></div>
+    <div class="strip" id="strip"></div>
+    <div class="wnote">기상청 예보를 기준으로 10월 29일 오전에 옮겨 둔 구미시 예보예요(11월 1일 예보는 찾지 못했어요). 지금 날씨는 <a href="https://www.google.com/search?q=%EA%B5%AC%EB%AF%B8+%EB%82%A0%EC%94%A8" target="_blank" rel="noopener">구글 날씨</a>에서 확인해 주세요.</div>
+  </section>
+
+  <div class="bar">
+    <div class="seg" id="days" role="group" aria-label="요일 선택"></div>
+    <div class="mode" role="group" aria-label="보기 방식">
+      <button id="m-day" aria-pressed="true">하루</button>
+      <button id="m-week" aria-pressed="false">주간</button>
+    </div>
+  </div>
+  <div id="notice"></div>
+  <div id="dayline"></div>
+  <main id="view"></main>
+
+  <footer>
+    <p>메뉴는 식당 운영 및 식자재 수급 상황에 따라 바뀔 수 있어요. 식단은 10월 26일~30일 주간 식단표예요. 다른 주 식단은 <a href="https://www.kopo.ac.kr/gumi/content.do?menu=4941" target="_blank" rel="noopener">학교 식단정보 페이지</a>에서 확인해 주세요.</p>
+  </footer>
+</div>
+
+<script>
+var DAYS=["월","화","수","목","금"];
+var NAMES={월:"월요일",화:"화요일",수:"수요일",목:"목요일",금:"금요일"};
+var DATES={월:"2026-10-26",화:"2026-10-27",수:"2026-10-28",목:"2026-10-29",금:"2026-10-30"};
+var TIMES={
+  b:{name:"아침",s:"07:50",e:"08:40"},
+  l:{name:"점심",s:"11:50",e:"13:10"},
+  d:{name:"저녁",s:"16:50",e:"17:40",note:"수업이 있는 학생은 월~목 18시까지 이용할 수 있어요"}
+};
+var RAW={
+  월:{b:"컵밥 , 음료",l:"잡곡밥 , 만둣국 , 돈갈비찜 , 꽃맛살샐러드 , 오이양파무침 , 포기김치",d:"쌀밥 , 얼큰쇠고기무국 , 두부조림 , 모듬강정 , 호박당근볶음 , 포기김치"},
+  화:{b:"모카크림빵 , 흰우유",l:"잡곡밥 , 참치김치찌개 , 어니언치킨까스 , 건새우마늘쫑무침 , 단배추생채 , 깍두기",d:"흰밥 , 돼지국밥 , 야채고로케/케찹 , 풋고추된장무침 , 부추양파무침 , 석박지/요구르트"},
+  수:{b:"컵밥 , 음료",l:"나가사끼짬뽕 , 마파두부 , 깐쇼새우 , 토마토샐러드/드레싱 , 포기김치 , 흰밥",d:"흰밥 , 유부장국 , 불닭볶음닭 , 맛감자/케이준S , 케요네즈 , 포기김치"},
+  목:{b:"모카크림빵 , 흰우유",l:"잡곡밥 , 조랭이미역국 , 바싹불고기/파채 , 무조림 , 명엽채조림 , 포기김치",d:"흰밥 , 부대찌개 , 계란후라이 , 청양멸치볶음 , 상추양파무침 , 포기김치"},
+  금:{b:"컵밥 , 음료",l:"콩나물밥/양념장 , 바지락고추장찌개 , 팽이버섯짬뽕조림 , 도시락김 , 포기김치 , 음료",d:"쌀밥 , 계란탕 , 오징어당면볶음 , 강된장 , 양배추찜/간장 , 포기김치"}
+};
+/* 구미시 예보 (10월 29일 기준). hi/lo: 낮 최고/아침 최저, p: 강수확률 높은 쪽, 11/2 이후는 기온만 */
+var W=[
+  {d:"2026-10-29",l:"목 10/29",e:"☁️",c:"흐림",hi:13,lo:2,p:null},
+  {d:"2026-10-30",l:"금 10/30",e:"🌦️",c:"오전 구름많고 한때 비, 오후 구름많음",hi:20,lo:8,p:60},
+  {d:"2026-10-31",l:"토 10/31",e:"☀️",c:"맑음",hi:17,lo:7,p:10},
+  {d:"2026-11-02",l:"월 11/2",e:"·",c:"",hi:18,lo:10,p:null},
+  {d:"2026-11-03",l:"화 11/3",e:"·",c:"",hi:16,lo:3,p:null},
+  {d:"2026-11-04",l:"수 11/4",e:"·",c:"",hi:17,lo:4,p:null},
+  {d:"2026-11-05",l:"목 11/5",e:"·",c:"",hi:19,lo:5,p:null},
+  {d:"2026-11-06",l:"금 11/6",e:"·",c:"",hi:18,lo:7,p:null}
+];
+var WM={};W.forEach(function(w){WM[w.d]=w});
+
+function pad(n){return n<10?"0"+n:""+n}
+var now=new Date();
+var todayStr=now.getFullYear()+"-"+pad(now.getMonth()+1)+"-"+pad(now.getDate());
+var dow=now.getDay();
+var todayKey=null;DAYS.forEach(function(k){if(DATES[k]===todayStr)todayKey=k});
+var current=todayKey||"월",mode="day";
+
+function items(s){return s.split(",").map(function(x){return x.trim()}).filter(Boolean)}
+function esc(s){return s.replace(/[&<>]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;"}[c]})}
+function mins(hm){var p=hm.split(":");return +p[0]*60+ +p[1]}
+function md(d){var p=d.split("-");return +p[1]+"/"+ +p[2]}
+
+function tipFor(w){
+  var t=[];
+  if(w.p>=50)t.push("비 소식이 있어요. 우산을 챙기세요.");
+  if(w.lo!==null&&w.lo<=5)t.push("아침 기온이 낮아요. 따뜻하게 입으세요.");
+  if(w.d==="2026-10-29")t.push("오전 7시 기온이 3° 안팎이고 낮과의 기온차가 커요. 겹쳐 입으세요.");
+  return t.join(" ")||"야외 활동하기 무난한 날씨예요.";
+}
+function renderWeather(){
+  var w=WM[todayStr],h="";
+  if(w){
+    h='<div class="now"><div class="e">'+w.e+'</div><div><div class="t">'+w.hi+'<small>°C 낮 최고</small></div><div class="c">'+w.c+(w.p!==null?' · 강수확률 '+w.p+'%':'')+(w.lo!==null?' · 아침 최저 '+w.lo+'°':'')+'</div></div></div><div class="tip">'+tipFor(w)+'</div>';
+  }else{
+    h='<div class="now"><div class="e">🌤️</div><div><div class="c">오늘 예보는 아직 담겨 있지 않아요. 아래 예보는 10월 29일 기준이에요.</div></div></div>';
+  }
+  document.getElementById("wnow").innerHTML=h;
+  var s="";
+  W.forEach(function(w){
+    var cls="dc"+(w.d===todayStr?" today":"")+(w.d<todayStr?" past":"");
+    s+='<div class="'+cls+'"><div class="n">'+w.l+'</div><div class="e">'+w.e+'</div><div>'+(w.lo!==null?w.lo+'° / ':'')+w.hi+'°</div><div class="r">'+(w.p>=30?'강수 '+w.p+'%':'')+'</div></div>';
+  });
+  document.getElementById("strip").innerHTML=s;
+}
+
+function status(key,mk){
+  if(key!==todayKey)return "";
+  var t=TIMES[mk],n=now.getHours()*60+now.getMinutes();
+  var end=(mk==="d"&&dow<=4)?mins("18:00"):mins(t.e);
+  if(n>=mins(t.s)&&n<=end)return "지금 식사 중";
+  if(n<mins(t.s))return "오늘 예정";
+  return "오늘 종료";
+}
+function renderDays(){
+  var h="";
+  DAYS.forEach(function(d){
+    h+='<button type="button" data-d="'+d+'" class="'+(d===todayKey?"today":"")+'" aria-pressed="'+(d===current)+'">'+d+'<small>'+md(DATES[d])+'</small></button>';
+  });
+  document.getElementById("days").innerHTML=h;
+}
+function renderLine(){
+  var w=WM[DATES[current]],h='<div class="dayline"><span>'+NAMES[current]+' '+md(DATES[current])+'</span>';
+  if(w)h+='<span class="chip">'+w.e+' '+w.c+' · '+(w.lo!==null?w.lo+'° / ':'')+w.hi+'°'+(w.p>=30?' · 강수 '+w.p+'%':'')+'</span>';
+  document.getElementById("dayline").innerHTML=mode==="day"?h+'</div>':'';
+}
+function renderDay(){
+  var out="";
+  ["b","l","d"].forEach(function(k){
+    var t=TIMES[k],st=status(current,k),list=items(RAW[current][k]);
+    out+='<section class="meal '+k+(st==="지금 식사 중"?" now":"")+'"><div class="mh"><h2>'+t.name+(st?'<span class="st">'+st+'</span>':'')+'</h2><span class="t">'+t.s+' ~ '+t.e+'</span></div>'+(t.note?'<div class="extra">'+t.note+'</div>':'')+'<ul class="items">';
+    list.forEach(function(it){
+      if(/^\*.*\*$/.test(it)){out+='<li class="badge">'+esc(it.replace(/\*/g,""))+'</li>';return}
+      var p=it.split("/");
+      out+='<li>'+esc(p[0])+(p[1]?' <span class="side">/ '+esc(p.slice(1).join("/"))+'</span>':'')+'</li>';
+    });
+    out+='</ul></section>';
+  });
+  document.getElementById("view").innerHTML=out;
+}
+function renderWeek(){
+  var h='<div class="scroll"><table><thead><tr><th>요일</th><th>아침</th><th>점심</th><th>저녁</th></tr></thead><tbody>';
+  DAYS.forEach(function(d){
+    h+='<tr'+(d===todayKey?' class="today"':'')+'><td>'+NAMES[d]+'</td>';
+    ["b","l","d"].forEach(function(k){
+      h+='<td>'+items(RAW[d][k]).map(function(i){return '<span class="it">'+esc(i.replace(/\*/g,"★"))+'</span>'}).join("")+'</td>';
+    });
+    h+='</tr>';
+  });
+  document.getElementById("view").innerHTML=h+'</tbody></table></div>';
+}
+function render(){
+  renderDays();renderLine();
+  document.getElementById("notice").innerHTML=(!todayKey&&mode==="day")?'<div class="notice">오늘은 이 식단표(10월 26일~30일)에 없는 날이에요. 월요일 식단부터 보여 드릴게요.</div>':'';
+  document.getElementById("days").style.display=mode==="day"?"flex":"none";
+  document.getElementById("m-day").setAttribute("aria-pressed",mode==="day");
+  document.getElementById("m-week").setAttribute("aria-pressed",mode==="week");
+  if(mode==="day")renderDay();else renderWeek();
+}
+document.getElementById("days").addEventListener("click",function(e){
+  var b=e.target.closest("button[data-d]");if(!b)return;current=b.getAttribute("data-d");render();
+});
+document.getElementById("m-day").addEventListener("click",function(){mode="day";render()});
+document.getElementById("m-week").addEventListener("click",function(){mode="week";render()});
+renderWeather();render();
+</script>
+</body>
+</html>
